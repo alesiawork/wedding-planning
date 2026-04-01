@@ -301,6 +301,43 @@
   const guestForm = document.getElementById('guest-form');
   const filterRsvp = document.getElementById('filter-rsvp');
   const filterParty = document.getElementById('filter-party');
+  const guestPlusOneSelect = document.getElementById('guest-plusone');
+  const guestPartnerSelect = document.getElementById('guest-partner');
+
+  function getAvailablePartners(excludeId) {
+    return state.guests.filter(g => g.id !== excludeId && g.plusOne !== 'partner');
+  }
+
+  function populatePartnerSelect(selectEl, excludeId, selectedId) {
+    const available = getAvailablePartners(excludeId);
+    selectEl.innerHTML = '<option value="">Select partner...</option>' +
+      available.map(g => `<option value="${g.id}" ${g.id === selectedId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`).join('');
+  }
+
+  guestPlusOneSelect.addEventListener('change', () => {
+    if (guestPlusOneSelect.value === 'partner') {
+      populatePartnerSelect(guestPartnerSelect, null, '');
+      guestPartnerSelect.style.display = '';
+    } else {
+      guestPartnerSelect.style.display = 'none';
+    }
+  });
+
+  function linkPartner(guestId, partnerId) {
+    const partner = state.guests.find(g => g.id === partnerId);
+    if (partner) {
+      partner.plusOne = 'partner';
+      partner.partnerId = guestId;
+    }
+  }
+
+  function unlinkPartner(guestId) {
+    const oldPartner = state.guests.find(g => g.partnerId === guestId);
+    if (oldPartner) {
+      oldPartner.plusOne = 'no';
+      oldPartner.partnerId = '';
+    }
+  }
 
   guestForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -315,11 +352,24 @@
       meal: document.getElementById('guest-meal').value,
       dietary: document.getElementById('guest-dietary').value.trim(),
       tableId: '',
+      partnerId: '',
     };
     if (!guest.name) return;
+
+    if (guest.plusOne === 'partner') {
+      const partnerId = guestPartnerSelect.value;
+      if (partnerId) {
+        guest.partnerId = partnerId;
+        linkPartner(guest.id, partnerId);
+      } else {
+        guest.plusOne = 'no';
+      }
+    }
+
     state.guests.push(guest);
     saveState();
     guestForm.reset();
+    guestPartnerSelect.style.display = 'none';
     renderGuests();
   });
 
@@ -363,23 +413,34 @@
 
     const partyLabels = { bride: "Bride's", groom: "Groom's", both: 'Both' };
 
-    tbody.innerHTML = guests.map((g) => `
-      <tr>
-        <td><strong>${escapeHtml(g.name)}</strong>${g.email ? '<br><span style="font-size:0.78rem;color:var(--color-text-muted)">' + escapeHtml(g.email) + '</span>' : ''}</td>
-        <td>${partyLabels[g.party] || g.party}</td>
-        <td><span class="status-badge ${g.rsvp}">${g.rsvp}</span></td>
-        <td>${g.plusOne === 'yes' ? 'Yes' : 'No'}</td>
-        <td>${g.meal ? escapeHtml(g.meal) : '—'}</td>
-        <td>${g.dietary ? escapeHtml(g.dietary) : '—'}</td>
-        <td>
-          <button class="btn-icon" onclick="app.editGuest('${g.id}')" title="Edit">✏️</button>
-          <button class="btn-icon" onclick="app.deleteGuest('${g.id}')" title="Delete">🗑️</button>
-        </td>
-      </tr>
-    `).join('');
+    tbody.innerHTML = guests.map((g) => {
+      let plusOneDisplay = 'No';
+      if (g.plusOne === 'partner' && g.partnerId) {
+        const partner = state.guests.find(p => p.id === g.partnerId);
+        plusOneDisplay = partner ? escapeHtml(partner.name) : 'Partner';
+      } else if (g.plusOne === 'yes') {
+        plusOneDisplay = 'Yes (+1)';
+      }
+
+      return `
+        <tr>
+          <td><strong>${escapeHtml(g.name)}</strong>${g.email ? '<br><span style="font-size:0.78rem;color:var(--color-text-muted)">' + escapeHtml(g.email) + '</span>' : ''}</td>
+          <td>${partyLabels[g.party] || g.party}</td>
+          <td><span class="status-badge ${g.rsvp}">${g.rsvp}</span></td>
+          <td>${g.plusOne === 'partner' ? '<span style="color:var(--color-primary);font-weight:500">' + plusOneDisplay + '</span>' : plusOneDisplay}</td>
+          <td>${g.meal ? escapeHtml(g.meal) : '—'}</td>
+          <td>${g.dietary ? escapeHtml(g.dietary) : '—'}</td>
+          <td>
+            <button class="btn-icon" onclick="app.editGuest('${g.id}')" title="Edit">✏️</button>
+            <button class="btn-icon" onclick="app.deleteGuest('${g.id}')" title="Delete">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
 
   function deleteGuest(id) {
+    unlinkPartner(id);
     state.guests = state.guests.filter(g => g.id !== id);
     state.tables.forEach(t => { t.guestIds = t.guestIds.filter(gid => gid !== id); });
     saveState();
@@ -389,6 +450,12 @@
   function editGuest(id) {
     const g = state.guests.find(g => g.id === id);
     if (!g) return;
+
+    const availablePartners = getAvailablePartners(id);
+    const partnerOptions = availablePartners.map(p =>
+      `<option value="${p.id}" ${p.id === g.partnerId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`
+    ).join('');
+
     openModal('Edit Guest', `
       <div class="form-group"><label>Name</label><input type="text" id="edit-guest-name" value="${escapeAttr(g.name)}"></div>
       <div class="form-group"><label>Email</label><input type="email" id="edit-guest-email" value="${escapeAttr(g.email)}"></div>
@@ -398,9 +465,14 @@
         <option value="groom" ${g.party === 'groom' ? 'selected' : ''}>Groom's Side</option>
         <option value="both" ${g.party === 'both' ? 'selected' : ''}>Both</option>
       </select></div>
-      <div class="form-group"><label>Plus-One</label><select id="edit-guest-plusone">
-        <option value="no" ${g.plusOne === 'no' ? 'selected' : ''}>No</option>
-        <option value="yes" ${g.plusOne === 'yes' ? 'selected' : ''}>Yes</option>
+      <div class="form-group"><label>Plus-One / Partner</label><select id="edit-guest-plusone">
+        <option value="no" ${g.plusOne === 'no' ? 'selected' : ''}>No Plus-One</option>
+        <option value="yes" ${g.plusOne === 'yes' ? 'selected' : ''}>Plus-One Invited</option>
+        <option value="partner" ${g.plusOne === 'partner' ? 'selected' : ''}>Partner / Spouse</option>
+      </select></div>
+      <div class="form-group" id="edit-partner-group" style="${g.plusOne === 'partner' ? '' : 'display:none'}"><label>Linked Partner</label><select id="edit-guest-partner">
+        <option value="">Select partner...</option>
+        ${partnerOptions}
       </select></div>
       <div class="form-group"><label>RSVP</label><select id="edit-guest-rsvp">
         <option value="pending" ${g.rsvp === 'pending' ? 'selected' : ''}>Pending</option>
@@ -417,17 +489,50 @@
       </select></div>
       <div class="form-group"><label>Dietary Restrictions</label><input type="text" id="edit-guest-dietary" value="${escapeAttr(g.dietary)}"></div>
     `, () => {
+      const oldPlusOne = g.plusOne;
+      const newPlusOne = document.getElementById('edit-guest-plusone').value;
+
+      if (oldPlusOne === 'partner' && newPlusOne !== 'partner') {
+        unlinkPartner(id);
+        g.partnerId = '';
+      }
+
       g.name = document.getElementById('edit-guest-name').value.trim();
       g.email = document.getElementById('edit-guest-email').value.trim();
       g.phone = document.getElementById('edit-guest-phone').value.trim();
       g.party = document.getElementById('edit-guest-party').value;
-      g.plusOne = document.getElementById('edit-guest-plusone').value;
+      g.plusOne = newPlusOne;
       g.rsvp = document.getElementById('edit-guest-rsvp').value;
       g.meal = document.getElementById('edit-guest-meal').value;
       g.dietary = document.getElementById('edit-guest-dietary').value.trim();
+
+      if (newPlusOne === 'partner') {
+        const newPartnerId = document.getElementById('edit-guest-partner').value;
+        if (newPartnerId) {
+          if (g.partnerId && g.partnerId !== newPartnerId) {
+            unlinkPartner(id);
+          }
+          g.partnerId = newPartnerId;
+          linkPartner(id, newPartnerId);
+        } else {
+          g.plusOne = 'no';
+          g.partnerId = '';
+        }
+      }
+
       saveState();
       renderGuests();
     });
+
+    setTimeout(() => {
+      const editPlusOne = document.getElementById('edit-guest-plusone');
+      const editPartnerGroup = document.getElementById('edit-partner-group');
+      if (editPlusOne && editPartnerGroup) {
+        editPlusOne.addEventListener('change', () => {
+          editPartnerGroup.style.display = editPlusOne.value === 'partner' ? '' : 'none';
+        });
+      }
+    }, 50);
   }
 
   // ═══════════════════════════════════════════
