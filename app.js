@@ -2,12 +2,12 @@
   'use strict';
 
   const CATEGORY_COLORS = {
-    Venue: '#8b6f5e', Catering: '#c4956a', Photography: '#6b9e6b',
-    Flowers: '#d4a84b', Music: '#6b8ec9', Attire: '#c96b6b',
-    Stationery: '#9b8ec4', Decor: '#e8cdb5', Transportation: '#7bc4c4',
-    Videography: '#b59a8a', Florist: '#d4a84b', 'DJ / Band': '#6b8ec9',
-    Baker: '#c4956a', 'Hair & Makeup': '#c96b6b', Officiant: '#8b6f5e',
-    Rentals: '#7bc4c4', Planner: '#9b8ec4', Other: '#8a8280',
+    Venue: '#7a9e7a', Catering: '#d4a0a0', Photography: '#6b9e6b',
+    Flowers: '#c9a0c4', Music: '#7aaec9', Attire: '#d4a0a0',
+    Stationery: '#a3c4a3', Decor: '#c9b896', Transportation: '#7bc4b8',
+    Videography: '#8aaa8a', Florist: '#c9a0c4', 'DJ / Band': '#7aaec9',
+    Baker: '#d4a0a0', 'Hair & Makeup': '#c4a0b8', Officiant: '#7a9e7a',
+    Rentals: '#7bc4b8', Planner: '#a3c4a3', Other: '#8a8a86',
   };
 
   // ─── State ───────────────────────────────
@@ -531,6 +531,12 @@
     return state.guests.filter(g => !seatedIds.has(g.id) && g.rsvp !== 'declined');
   }
 
+  function getInitials(name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
   function renderSeating() {
     const layout = document.getElementById('seating-layout');
     const emptyMsg = document.getElementById('seating-empty');
@@ -550,21 +556,50 @@
         .map(id => state.guests.find(g => g.id === id))
         .filter(Boolean);
       const isFull = seated.length >= t.capacity;
+      const totalSlots = t.capacity;
+      const radius = 105;
+      const angleStep = (2 * Math.PI) / totalSlots;
+      const centerX = 120;
+      const centerY = 120;
+
+      const chairsHtml = [];
+      for (let i = 0; i < totalSlots; i++) {
+        const angle = angleStep * i - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        const guest = seated[i];
+
+        if (guest) {
+          chairsHtml.push(`
+            <div class="seating-chair" style="left:${x}px;top:${y}px" onclick="app.unseatGuest('${t.id}','${guest.id}')">
+              <div class="seating-chair-avatar occupied" title="${escapeAttr(guest.name)}">
+                ${escapeHtml(getInitials(guest.name))}
+                <span class="seating-chair-tooltip">${escapeHtml(guest.name)}</span>
+              </div>
+            </div>
+          `);
+        } else {
+          chairsHtml.push(`
+            <div class="seating-chair" style="left:${x}px;top:${y}px">
+              <div class="seating-chair-avatar empty-seat">+</div>
+            </div>
+          `);
+        }
+      }
+
+      const tableNum = t.name.replace(/\D/g, '') || '#';
 
       return `
         <div class="seating-table-card">
-          <div class="seating-table-header">
-            <h4>${escapeHtml(t.name)}</h4>
-            <span class="seating-capacity"><span class="count ${isFull ? 'full' : ''}">${seated.length}</span> / ${t.capacity} seats</span>
+          <div class="seating-round-visual">
+            <div class="seating-round-table">
+              <span class="table-number">${escapeHtml(tableNum)}</span>
+              <span class="table-label">${escapeHtml(t.name)}</span>
+            </div>
+            ${chairsHtml.join('')}
           </div>
-          <div class="seating-guest-list">
-            ${seated.length === 0 ? '<span style="font-size:0.82rem;color:var(--color-text-muted);padding:0.3rem">No guests assigned</span>' : ''}
-            ${seated.map(g => `
-              <div class="seating-guest">
-                <span class="seating-guest-name">${escapeHtml(g.name)}</span>
-                <button class="btn-icon" onclick="app.unseatGuest('${t.id}','${g.id}')" title="Remove">✕</button>
-              </div>
-            `).join('')}
+          <div class="seating-table-info">
+            <span class="seating-capacity"><span class="count ${isFull ? 'full' : ''}">${seated.length}</span> / ${t.capacity} seats</span>
           </div>
           ${!isFull && unseated.length > 0 ? `
             <div class="seating-add-row">
