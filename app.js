@@ -10,6 +10,29 @@
     Rentals: '#7bc4b8', Planner: '#a3c4a3', Other: '#8a8a86',
   };
 
+  // ─── Firebase Cloud Sync ─────────────────
+  let firebaseRef = null;
+  let lastSaveTimestamp = 0;
+
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMkHZgvWGnwdS32izKq0WwyKXlsi89va4",
+      authDomain: "wedding-planning-b7755.firebaseapp.com",
+      databaseURL: "https://wedding-planning-b7755-default-rtdb.firebaseio.com",
+      projectId: "wedding-planning-b7755",
+      storageBucket: "wedding-planning-b7755.firebasestorage.app",
+      messagingSenderId: "576327502141",
+      appId: "1:576327502141:web:9884f6a57b56a0d7d45d54"
+    };
+
+    if (firebaseConfig.apiKey !== "REPLACE_ME" && typeof firebase !== 'undefined') {
+      firebase.initializeApp(firebaseConfig);
+      firebaseRef = firebase.database().ref('wedding-planner');
+    }
+  } catch (e) {
+    console.warn('Firebase sync not available:', e.message);
+  }
+
   // ─── State ───────────────────────────────
   let state = loadState();
 
@@ -40,6 +63,10 @@
 
   function saveState() {
     localStorage.setItem('wedding-planner-state', JSON.stringify(state));
+    if (firebaseRef) {
+      lastSaveTimestamp = Date.now();
+      firebaseRef.set(state);
+    }
   }
 
   function uid() {
@@ -1033,14 +1060,32 @@
     deleteNote, editNote,
   };
 
+  // ─── Render All ─────────────────────────
+  function refreshAll() {
+    startCountdown();
+    renderDashboard();
+    renderBudget();
+    renderGuests();
+    renderVendors();
+    renderSeating();
+    renderTimeline();
+    renderTodos();
+    renderNotes();
+  }
+
+  // ─── Firebase Listener ─────────────────
+  if (firebaseRef) {
+    firebaseRef.on('value', (snapshot) => {
+      if (Date.now() - lastSaveTimestamp < 2000) return;
+      const data = snapshot.val();
+      if (data) {
+        state = Object.assign(defaultState(), data);
+        localStorage.setItem('wedding-planner-state', JSON.stringify(state));
+        refreshAll();
+      }
+    });
+  }
+
   // ─── Initial Render ──────────────────────
-  startCountdown();
-  renderDashboard();
-  renderBudget();
-  renderGuests();
-  renderVendors();
-  renderSeating();
-  renderTimeline();
-  renderTodos();
-  renderNotes();
+  refreshAll();
 })();
