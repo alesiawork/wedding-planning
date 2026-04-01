@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Wedding Planner</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1 class="logo">Our Wedding</h1>
+      <nav>
+        <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+        <button class="nav-btn" data-section="budget">Budget</button>
+        <button class="nav-btn" data-section="guests">Guests</button>
+        <button class="nav-btn" data-section="vendors">Vendors</button>
+        <button class="nav-btn" data-section="seating">Seating</button>
+        <button class="nav-btn" data-section="timeline">Timeline</button>
+        <button class="nav-btn" data-section="todos">To-Do</button>
+        <button class="nav-btn" data-section="notes">Notes</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ═══ Dashboard ═══ -->
+    <section id="dashboard" class="section active">
+      <div class="section-header">
+        <h2>Wedding Dashboard</h2>
+        <p class="subtitle">Your planning overview at a glance</p>
+      </div>
+
+      <div class="countdown-banner" id="countdown-banner">
+        <div class="countdown-inner">
+          <div class="countdown-date-setter">
+            <label for="wedding-date-input">Wedding Date</label>
+            <input type="date" id="wedding-date-input">
+            <button class="btn btn-primary btn-sm" id="set-date-btn">Set</button>
+          </div>
+          <div class="countdown-display" id="countdown-display" style="display:none">
+            <div class="countdown-unit"><span class="countdown-num" id="cd-days">0</span><span class="countdown-label">Days</span></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit"><span class="countdown-num" id="cd-hours">0</span><span class="countdown-label">Hours</span></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit"><span class="countdown-num" id="cd-mins">0</span><span class="countdown-label">Minutes</span></div>
+            <div class="countdown-sep">:</div>
+            <div class="countdown-unit"><span class="countdown-num" id="cd-secs">0</span><span class="countdown-label">Seconds</span></div>
+          </div>
+          <p class="countdown-message" id="countdown-message"></p>
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="dash-card">
+          <div class="dash-card-icon">💰</div>
+          <div class="dash-card-content">
+            <span class="dash-label">Total Budget</span>
+            <span class="dash-value" id="dash-budget">$0</span>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon">💸</div>
+          <div class="dash-card-content">
+            <span class="dash-label">Total Spent</span>
+            <span class="dash-value" id="dash-spent">$0</span>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon">👥</div>
+          <div class="dash-card-content">
+            <span class="dash-label">Guests</span>
+            <span class="dash-value" id="dash-guests">0</span>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon">💌</div>
+          <div class="dash-card-content">
+            <span class="dash-label">RSVPs In</span>
+            <span class="dash-value" id="dash-rsvps">0 / 0</span>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon">🏪</div>
+          <div class="dash-card-content">
+            <span class="dash-label">Vendors Booked</span>
+            <span class="dash-value" id="dash-vendors">0</span>
+          </div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-icon">✅</div>
+          <div class="dash-card-content">
+            <span class="dash-label">Tasks Done</span>
+            <span class="dash-value" id="dash-tasks">0 / 0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-row">
+        <div class="card budget-overview-card">
+          <h3>Budget Overview</h3>
+          <div class="budget-bar-container">
+            <div class="budget-bar">
+              <div class="budget-bar-fill" id="dash-budget-bar"></div>
+            </div>
+            <div class="budget-bar-labels">
+              <span id="dash-bar-spent">$0 spent</span>
+              <span id="dash-bar-remaining">$0 remaining</span>
+            </div>
+          </div>
+          <div class="category-breakdown" id="dash-category-breakdown"></div>
+        </div>
+        <div class="card upcoming-tasks-card">
+          <h3>Upcoming Tasks</h3>
+          <div id="dash-upcoming-tasks" class="upcoming-tasks-list">
+            <p class="empty-state-small">No pending tasks yet</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Budget ═══ -->
+    <section id="budget" class="section">
+      <div class="section-header">
+        <h2>Budget Tracker</h2>
+        <p class="subtitle">Keep your wedding spending on track</p>
+      </div>
+
+      <div class="budget-top-bar">
+        <div class="total-budget-setter">
+          <label for="total-budget-input">Total Budget</label>
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="total-budget-input" placeholder="25,000" min="0">
+          </div>
+          <button class="btn btn-primary" id="set-budget-btn">Set Budget</button>
+        </div>
+        <div class="budget-summary-pills">
+          <div class="pill pill-budget">
+            <span class="pill-label">Budget</span>
+            <span class="pill-value" id="budget-total-display">$0</span>
+          </div>
+          <div class="pill pill-spent">
+            <span class="pill-label">Spent</span>
+            <span class="pill-value" id="budget-spent-display">$0</span>
+          </div>
+          <div class="pill pill-remaining">
+            <span class="pill-label">Remaining</span>
+            <span class="pill-value" id="budget-remaining-display">$0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Add Expense</h3>
+        <form id="expense-form" class="form-row">
+          <input type="text" id="expense-name" placeholder="Expense name" required>
+          <select id="expense-category">
+            <option value="Venue">Venue</option>
+            <option value="Catering">Catering</option>
+            <option value="Photography">Photography</option>
+            <option value="Flowers">Flowers</option>
+            <option value="Music">Music / DJ</option>
+            <option value="Attire">Attire</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Decor">Decor</option>
+            <option value="Transportation">Transportation</option>
+            <option value="Other">Other</option>
+          </select>
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="expense-amount" placeholder="0.00" min="0" step="0.01" required>
+          </div>
+          <input type="date" id="expense-date">
+          <select id="expense-status">
+            <option value="estimated">Estimated</option>
+            <option value="paid">Paid</option>
+            <option value="deposit">Deposit Paid</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="table-header">
+          <h3>Expenses</h3>
+          <div class="table-filters">
+            <select id="filter-category">
+              <option value="all">All Categories</option>
+              <option value="Venue">Venue</option>
+              <option value="Catering">Catering</option>
+              <option value="Photography">Photography</option>
+              <option value="Flowers">Flowers</option>
+              <option value="Music">Music / DJ</option>
+              <option value="Attire">Attire</option>
+              <option value="Stationery">Stationery</option>
+              <option value="Decor">Decor</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table id="expenses-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="expenses-body"></tbody>
+          </table>
+          <p class="empty-state" id="expenses-empty">No expenses added yet. Start tracking your wedding budget above.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Guest List ═══ -->
+    <section id="guests" class="section">
+      <div class="section-header">
+        <h2>Guest List</h2>
+        <p class="subtitle">Track invitations, RSVPs, and meal preferences</p>
+      </div>
+
+      <div class="guest-summary-bar">
+        <div class="pill"><span class="pill-label">Invited</span><span class="pill-value" id="guest-total">0</span></div>
+        <div class="pill"><span class="pill-label">Confirmed</span><span class="pill-value guest-confirmed" id="guest-confirmed">0</span></div>
+        <div class="pill"><span class="pill-label">Declined</span><span class="pill-value guest-declined" id="guest-declined">0</span></div>
+        <div class="pill"><span class="pill-label">Pending</span><span class="pill-value guest-pending" id="guest-pending">0</span></div>
+        <div class="pill"><span class="pill-label">Total Attending</span><span class="pill-value" id="guest-attending">0</span></div>
+      </div>
+
+      <div class="card">
+        <h3>Add Guest</h3>
+        <form id="guest-form" class="form-grid">
+          <input type="text" id="guest-name" placeholder="Full name" required>
+          <input type="email" id="guest-email" placeholder="Email address">
+          <input type="tel" id="guest-phone" placeholder="Phone number">
+          <select id="guest-party">
+            <option value="bride">Bride's Side</option>
+            <option value="groom">Groom's Side</option>
+            <option value="both">Both</option>
+          </select>
+          <select id="guest-plusone">
+            <option value="no">No Plus-One</option>
+            <option value="yes">Plus-One Invited</option>
+          </select>
+          <select id="guest-rsvp">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="declined">Declined</option>
+          </select>
+          <select id="guest-meal">
+            <option value="">No Preference</option>
+            <option value="chicken">Chicken</option>
+            <option value="beef">Beef</option>
+            <option value="fish">Fish</option>
+            <option value="vegetarian">Vegetarian</option>
+            <option value="vegan">Vegan</option>
+          </select>
+          <input type="text" id="guest-dietary" placeholder="Dietary restrictions">
+          <button type="submit" class="btn btn-primary">Add Guest</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="table-header">
+          <h3>Guest List</h3>
+          <div class="table-filters">
+            <select id="filter-rsvp">
+              <option value="all">All RSVPs</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="declined">Declined</option>
+              <option value="pending">Pending</option>
+            </select>
+            <select id="filter-party">
+              <option value="all">All Sides</option>
+              <option value="bride">Bride's Side</option>
+              <option value="groom">Groom's Side</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Party</th>
+                <th>RSVP</th>
+                <th>Plus-One</th>
+                <th>Meal</th>
+                <th>Dietary</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="guests-body"></tbody>
+          </table>
+          <p class="empty-state" id="guests-empty">No guests added yet. Start building your guest list above.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Vendors ═══ -->
+    <section id="vendors" class="section">
+      <div class="section-header">
+        <h2>Vendor List</h2>
+        <p class="subtitle">Manage your wedding vendors and contacts</p>
+      </div>
+
+      <div class="card">
+        <h3>Add Vendor</h3>
+        <form id="vendor-form" class="form-grid">
+          <input type="text" id="vendor-name" placeholder="Vendor / business name" required>
+          <select id="vendor-category">
+            <option value="Venue">Venue</option>
+            <option value="Catering">Catering</option>
+            <option value="Photography">Photography</option>
+            <option value="Videography">Videography</option>
+            <option value="Florist">Florist</option>
+            <option value="DJ / Band">DJ / Band</option>
+            <option value="Baker">Baker</option>
+            <option value="Hair & Makeup">Hair & Makeup</option>
+            <option value="Officiant">Officiant</option>
+            <option value="Rentals">Rentals</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Transportation">Transportation</option>
+            <option value="Planner">Planner</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="vendor-contact" placeholder="Contact person">
+          <input type="tel" id="vendor-phone" placeholder="Phone number">
+          <input type="email" id="vendor-email" placeholder="Email address">
+          <input type="url" id="vendor-website" placeholder="Website URL">
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="vendor-cost" placeholder="Quoted cost" min="0" step="0.01">
+          </div>
+          <select id="vendor-status">
+            <option value="researching">Researching</option>
+            <option value="contacted">Contacted</option>
+            <option value="meeting">Meeting Scheduled</option>
+            <option value="booked">Booked</option>
+            <option value="declined">Declined</option>
+          </select>
+          <textarea id="vendor-notes" placeholder="Notes..." rows="2"></textarea>
+          <button type="submit" class="btn btn-primary">Add Vendor</button>
+        </form>
+      </div>
+
+      <div class="vendor-grid" id="vendor-grid">
+        <p class="empty-state" id="vendors-empty">No vendors added yet. Start building your vendor dream team.</p>
+      </div>
+    </section>
+
+    <!-- ═══ Seating Chart ═══ -->
+    <section id="seating" class="section">
+      <div class="section-header">
+        <h2>Seating Chart</h2>
+        <p class="subtitle">Arrange tables and assign guest seating</p>
+      </div>
+
+      <div class="card">
+        <h3>Add Table</h3>
+        <form id="table-form" class="form-row">
+          <input type="text" id="table-name" placeholder="Table name (e.g. Table 1, Head Table)" required>
+          <input type="number" id="table-capacity" placeholder="Seats" min="1" max="50" value="8" required>
+          <button type="submit" class="btn btn-primary">Add Table</button>
+        </form>
+      </div>
+
+      <div class="seating-layout" id="seating-layout">
+        <p class="empty-state" id="seating-empty">No tables created yet. Add your first table above.</p>
+      </div>
+    </section>
+
+    <!-- ═══ Timeline ═══ -->
+    <section id="timeline" class="section">
+      <div class="section-header">
+        <h2>Day-of Timeline</h2>
+        <p class="subtitle">Plan your wedding day hour by hour</p>
+      </div>
+
+      <div class="card">
+        <h3>Add Event</h3>
+        <form id="timeline-form" class="form-row">
+          <input type="time" id="event-time" required>
+          <input type="text" id="event-title" placeholder="Event name (e.g. Ceremony)" required>
+          <input type="text" id="event-location" placeholder="Location">
+          <input type="number" id="event-duration" placeholder="Duration (min)" min="1">
+          <input type="text" id="event-notes" placeholder="Notes">
+          <button type="submit" class="btn btn-primary">Add Event</button>
+        </form>
+      </div>
+
+      <div class="timeline-view" id="timeline-view">
+        <p class="empty-state" id="timeline-empty">No events scheduled yet. Start building your wedding day timeline.</p>
+      </div>
+    </section>
+
+    <!-- ═══ To-Do ═══ -->
+    <section id="todos" class="section">
+      <div class="section-header">
+        <h2>To-Do List</h2>
+        <p class="subtitle">Stay organized with your wedding checklist</p>
+      </div>
+
+      <div class="card">
+        <h3>Add Task</h3>
+        <form id="todo-form" class="form-row">
+          <input type="text" id="todo-title" placeholder="What needs to be done?" required>
+          <select id="todo-category">
+            <option value="Planning">Planning</option>
+            <option value="Venue">Venue</option>
+            <option value="Attire">Attire</option>
+            <option value="Food & Drink">Food & Drink</option>
+            <option value="Decor">Decor</option>
+            <option value="Music">Music</option>
+            <option value="Stationery">Stationery</option>
+            <option value="Beauty">Beauty</option>
+            <option value="Guests">Guests</option>
+            <option value="Legal">Legal</option>
+            <option value="Other">Other</option>
+          </select>
+          <select id="todo-priority">
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+          <input type="date" id="todo-due">
+          <button type="submit" class="btn btn-primary">Add Task</button>
+        </form>
+      </div>
+
+      <div class="todo-filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+      </div>
+
+      <div class="todo-list" id="todo-list">
+        <p class="empty-state" id="todos-empty">No tasks yet. Add your first wedding to-do above.</p>
+      </div>
+    </section>
+
+    <!-- ═══ Notes / Inspiration ═══ -->
+    <section id="notes" class="section">
+      <div class="section-header">
+        <h2>Notes &amp; Inspiration</h2>
+        <p class="subtitle">Capture ideas, color palettes, and inspiration</p>
+      </div>
+
+      <div class="card">
+        <h3>Add Note</h3>
+        <form id="note-form" class="form-grid">
+          <input type="text" id="note-title" placeholder="Note title" required>
+          <select id="note-category">
+            <option value="Ideas">Ideas</option>
+            <option value="Colors">Colors</option>
+            <option value="Theme">Theme</option>
+            <option value="Flowers">Flowers</option>
+            <option value="Dress">Dress</option>
+            <option value="Food">Food</option>
+            <option value="Music">Music</option>
+            <option value="Venue">Venue</option>
+            <option value="Other">Other</option>
+          </select>
+          <select id="note-color">
+            <option value="cream">Cream</option>
+            <option value="blush">Blush</option>
+            <option value="sage">Sage</option>
+            <option value="lavender">Lavender</option>
+            <option value="sky">Sky</option>
+            <option value="peach">Peach</option>
+            <option value="gold">Gold</option>
+          </select>
+          <textarea id="note-content" placeholder="Write your thoughts, ideas, links..." rows="3" required></textarea>
+          <button type="submit" class="btn btn-primary">Add Note</button>
+        </form>
+      </div>
+
+      <div class="notes-grid" id="notes-grid">
+        <p class="empty-state" id="notes-empty">No notes yet. Start capturing your wedding inspiration above.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Made with love for your special day</p>
+  </footer>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="edit-modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Edit</h3>
+        <button class="modal-close" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
