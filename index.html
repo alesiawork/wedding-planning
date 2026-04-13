@@ -17,6 +17,7 @@
         <button class="nav-btn active" data-section="dashboard">Dashboard</button>
         <button class="nav-btn" data-section="budget">Budget</button>
         <button class="nav-btn" data-section="guests">Guests</button>
+        <button class="nav-btn" data-section="venues">Venues</button>
         <button class="nav-btn" data-section="vendors">Vendors</button>
         <button class="nav-btn" data-section="seating">Seating</button>
         <button class="nav-btn" data-section="timeline">Timeline</button>
@@ -309,6 +310,92 @@
           </table>
           <p class="empty-state" id="guests-empty">No guests added yet. Start building your guest list above.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ═══ Venues & Vendor Research ═══ -->
+    <section id="venues" class="section">
+      <div class="section-header">
+        <h2>Venues &amp; Vendor Research</h2>
+        <p class="subtitle">Compare potential venues and vendors side by side</p>
+      </div>
+
+      <div class="card">
+        <h3>Add Venue / Vendor Option</h3>
+        <form id="venue-form" class="form-grid">
+          <input type="text" id="venue-name" placeholder="Venue or vendor name" required>
+          <select id="venue-type">
+            <option value="Venue">Wedding Venue</option>
+            <option value="Catering">Catering</option>
+            <option value="Photography">Photography</option>
+            <option value="Videography">Videography</option>
+            <option value="Florist">Florist</option>
+            <option value="DJ / Band">DJ / Band</option>
+            <option value="Baker">Baker / Cake</option>
+            <option value="Hair & Makeup">Hair & Makeup</option>
+            <option value="Officiant">Officiant</option>
+            <option value="Rentals">Rentals</option>
+            <option value="Planner">Planner / Coordinator</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" id="venue-location" placeholder="Location / address">
+          <input type="number" id="venue-capacity" placeholder="Guest capacity" min="1">
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="venue-cost-low" placeholder="Est. cost (low)" min="0" step="1">
+          </div>
+          <div class="currency-input">
+            <span class="currency-symbol">$</span>
+            <input type="number" id="venue-cost-high" placeholder="Est. cost (high)" min="0" step="1">
+          </div>
+          <select id="venue-setting">
+            <option value="">Setting...</option>
+            <option value="indoor">Indoor</option>
+            <option value="outdoor">Outdoor</option>
+            <option value="both">Indoor & Outdoor</option>
+          </select>
+          <select id="venue-catering">
+            <option value="">Catering...</option>
+            <option value="included">Catering Included</option>
+            <option value="preferred">Preferred Vendors Only</option>
+            <option value="byob">Bring Your Own</option>
+            <option value="na">N/A</option>
+          </select>
+          <input type="url" id="venue-website" placeholder="Website URL">
+          <input type="tel" id="venue-phone" placeholder="Phone number">
+          <input type="text" id="venue-contact" placeholder="Contact person">
+          <input type="date" id="venue-avail" placeholder="Available date">
+          <select id="venue-rating">
+            <option value="0">Rating...</option>
+            <option value="5">5 — Love it</option>
+            <option value="4">4 — Really like</option>
+            <option value="3">3 — It's okay</option>
+            <option value="2">2 — Not great</option>
+            <option value="1">1 — No way</option>
+          </select>
+          <select id="venue-status">
+            <option value="researching">Researching</option>
+            <option value="toured">Toured / Met</option>
+            <option value="favorite">Favorite</option>
+            <option value="booked">Booked</option>
+            <option value="passed">Passed</option>
+          </select>
+          <input type="text" id="venue-pros" placeholder="Pros (comma-separated)">
+          <input type="text" id="venue-cons" placeholder="Cons (comma-separated)">
+          <textarea id="venue-notes" placeholder="Notes, impressions, questions to ask..." rows="2"></textarea>
+          <button type="submit" class="btn btn-primary">Add Option</button>
+        </form>
+      </div>
+
+      <div class="venue-filters">
+        <button class="filter-btn active" data-venue-filter="all">All</button>
+        <button class="filter-btn" data-venue-filter="Venue">Venues</button>
+        <button class="filter-btn" data-venue-filter="vendor">Vendors</button>
+        <button class="filter-btn" data-venue-filter="favorite">Favorites</button>
+      </div>
+
+      <div class="venue-grid" id="venue-grid">
+        <p class="empty-state" id="venues-empty">No venues or vendors added yet. Start researching your options above.</p>
       </div>
     </section>
 

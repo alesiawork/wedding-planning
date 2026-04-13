@@ -47,6 +47,7 @@
       tables: [],
       timelineEvents: [],
       notes: [],
+      venues: [],
     };
   }
 
@@ -533,6 +534,212 @@
         });
       }
     }, 50);
+  }
+
+  // ═══════════════════════════════════════════
+  // VENUES & VENDOR RESEARCH
+  // ═══════════════════════════════════════════
+  const venueForm = document.getElementById('venue-form');
+  const venueFilterBtns = document.querySelectorAll('[data-venue-filter]');
+  let venueFilter = 'all';
+
+  venueForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const venue = {
+      id: uid(),
+      name: document.getElementById('venue-name').value.trim(),
+      type: document.getElementById('venue-type').value,
+      location: document.getElementById('venue-location').value.trim(),
+      capacity: parseInt(document.getElementById('venue-capacity').value, 10) || 0,
+      costLow: parseFloat(document.getElementById('venue-cost-low').value) || 0,
+      costHigh: parseFloat(document.getElementById('venue-cost-high').value) || 0,
+      setting: document.getElementById('venue-setting').value,
+      catering: document.getElementById('venue-catering').value,
+      website: document.getElementById('venue-website').value.trim(),
+      phone: document.getElementById('venue-phone').value.trim(),
+      contact: document.getElementById('venue-contact').value.trim(),
+      availability: document.getElementById('venue-avail').value,
+      rating: parseInt(document.getElementById('venue-rating').value, 10) || 0,
+      status: document.getElementById('venue-status').value,
+      pros: document.getElementById('venue-pros').value.trim(),
+      cons: document.getElementById('venue-cons').value.trim(),
+      notes: document.getElementById('venue-notes').value.trim(),
+    };
+    if (!venue.name) return;
+    state.venues.push(venue);
+    saveState();
+    venueForm.reset();
+    renderVenues();
+  });
+
+  venueFilterBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      venueFilterBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      venueFilter = btn.dataset.venueFilter;
+      renderVenues();
+    });
+  });
+
+  function renderStars(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      html += i <= rating ? '★' : '<span class="empty-star">★</span>';
+    }
+    return html;
+  }
+
+  function renderVenues() {
+    const grid = document.getElementById('venue-grid');
+    const emptyMsg = document.getElementById('venues-empty');
+
+    let venues = state.venues || [];
+    if (venueFilter === 'Venue') {
+      venues = venues.filter(v => v.type === 'Venue');
+    } else if (venueFilter === 'vendor') {
+      venues = venues.filter(v => v.type !== 'Venue');
+    } else if (venueFilter === 'favorite') {
+      venues = venues.filter(v => v.status === 'favorite');
+    }
+
+    if (venues.length === 0) {
+      grid.innerHTML = '';
+      grid.appendChild(emptyMsg);
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    const statusOrder = { favorite: 0, booked: 1, toured: 2, researching: 3, passed: 4 };
+    venues = [...venues].sort((a, b) => (statusOrder[a.status] ?? 5) - (statusOrder[b.status] ?? 5));
+
+    const settingLabels = { indoor: 'Indoor', outdoor: 'Outdoor', both: 'Indoor & Outdoor' };
+    const cateringLabels = { included: 'Catering Included', preferred: 'Preferred Vendors', byob: 'Bring Your Own', na: 'N/A' };
+
+    grid.innerHTML = venues.map((v) => {
+      const costRange = v.costLow || v.costHigh
+        ? (v.costLow && v.costHigh && v.costLow !== v.costHigh
+          ? `${fmt(v.costLow)} – ${fmt(v.costHigh)}`
+          : fmt(v.costHigh || v.costLow))
+        : '';
+
+      const prosArr = v.pros ? v.pros.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const consArr = v.cons ? v.cons.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+      const cardClass = v.status === 'favorite' ? 'is-favorite' : v.status === 'booked' ? 'is-booked' : '';
+
+      return `
+        <div class="venue-card ${cardClass}">
+          <div class="venue-card-header">
+            <h4>${escapeHtml(v.name)}</h4>
+            <span class="venue-card-type">${escapeHtml(v.type)}</span>
+          </div>
+
+          <div class="venue-card-stats">
+            ${v.capacity ? `<div class="venue-stat">👥 <strong>${v.capacity}</strong> guests</div>` : ''}
+            ${costRange ? `<div class="venue-stat">💰 <strong>${costRange}</strong></div>` : ''}
+            ${v.setting ? `<div class="venue-stat">${v.setting === 'outdoor' ? '🌿' : v.setting === 'indoor' ? '🏛' : '🏛🌿'} ${settingLabels[v.setting] || ''}</div>` : ''}
+            ${v.catering ? `<div class="venue-stat">🍽 ${cateringLabels[v.catering] || ''}</div>` : ''}
+          </div>
+
+          <div class="venue-card-details">
+            ${v.location ? `<span>📍 ${escapeHtml(v.location)}</span>` : ''}
+            ${v.contact ? `<span>👤 ${escapeHtml(v.contact)}${v.phone ? ' — ' + escapeHtml(v.phone) : ''}</span>` : (v.phone ? `<span>📞 ${escapeHtml(v.phone)}</span>` : '')}
+            ${v.website ? `<span>🔗 <a href="${escapeAttr(v.website)}" target="_blank" rel="noopener">Website</a></span>` : ''}
+            ${v.availability ? `<span>📅 Available: ${fmtDate(v.availability)}</span>` : ''}
+            ${v.rating ? `<span class="venue-rating-stars">${renderStars(v.rating)}</span>` : ''}
+          </div>
+
+          ${prosArr.length || consArr.length ? `
+            <div class="venue-pros-cons">
+              <div class="venue-pros">
+                ${prosArr.length ? `<div class="venue-pros-label">Pros</div><ul>${prosArr.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>` : ''}
+              </div>
+              <div class="venue-cons">
+                ${consArr.length ? `<div class="venue-cons-label">Cons</div><ul>${consArr.map(c => `<li>${escapeHtml(c)}</li>`).join('')}</ul>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          ${v.notes ? `<div class="venue-card-notes">${escapeHtml(v.notes)}</div>` : ''}
+
+          <div class="venue-card-footer">
+            <span class="status-badge ${v.status}">${v.status}</span>
+            <div class="vendor-actions">
+              <button class="btn-icon" onclick="app.editVenue('${v.id}')" title="Edit">✏️</button>
+              <button class="btn-icon" onclick="app.deleteVenue('${v.id}')" title="Delete">🗑️</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function deleteVenue(id) {
+    state.venues = state.venues.filter(v => v.id !== id);
+    saveState();
+    renderVenues();
+  }
+
+  function editVenue(id) {
+    const v = (state.venues || []).find(v => v.id === id);
+    if (!v) return;
+
+    const typeOpts = ['Venue','Catering','Photography','Videography','Florist','DJ / Band','Baker','Hair & Makeup','Officiant','Rentals','Planner','Other'];
+    const settingOpts = [['','Setting...'],['indoor','Indoor'],['outdoor','Outdoor'],['both','Indoor & Outdoor']];
+    const cateringOpts = [['','Catering...'],['included','Catering Included'],['preferred','Preferred Vendors'],['byob','Bring Your Own'],['na','N/A']];
+    const ratingOpts = [[0,'Rating...'],[5,'5 — Love it'],[4,'4 — Really like'],[3,'3 — It\'s okay'],[2,'2 — Not great'],[1,'1 — No way']];
+    const statusOpts = [['researching','Researching'],['toured','Toured / Met'],['favorite','Favorite'],['booked','Booked'],['passed','Passed']];
+
+    openModal('Edit Venue / Vendor', `
+      <div class="form-group"><label>Name</label><input type="text" id="edit-venue-name" value="${escapeAttr(v.name)}"></div>
+      <div class="form-group"><label>Type</label><select id="edit-venue-type">
+        ${typeOpts.map(t => `<option value="${t}" ${t === v.type ? 'selected' : ''}>${t}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Location</label><input type="text" id="edit-venue-location" value="${escapeAttr(v.location)}"></div>
+      <div class="form-group"><label>Guest Capacity</label><input type="number" id="edit-venue-capacity" value="${v.capacity || ''}" min="1"></div>
+      <div class="form-group"><label>Est. Cost (Low)</label><input type="number" id="edit-venue-cost-low" value="${v.costLow || ''}" min="0"></div>
+      <div class="form-group"><label>Est. Cost (High)</label><input type="number" id="edit-venue-cost-high" value="${v.costHigh || ''}" min="0"></div>
+      <div class="form-group"><label>Setting</label><select id="edit-venue-setting">
+        ${settingOpts.map(([val, label]) => `<option value="${val}" ${val === v.setting ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Catering</label><select id="edit-venue-catering">
+        ${cateringOpts.map(([val, label]) => `<option value="${val}" ${val === v.catering ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Website</label><input type="url" id="edit-venue-website" value="${escapeAttr(v.website)}"></div>
+      <div class="form-group"><label>Phone</label><input type="tel" id="edit-venue-phone" value="${escapeAttr(v.phone)}"></div>
+      <div class="form-group"><label>Contact</label><input type="text" id="edit-venue-contact" value="${escapeAttr(v.contact)}"></div>
+      <div class="form-group"><label>Available Date</label><input type="date" id="edit-venue-avail" value="${v.availability || ''}"></div>
+      <div class="form-group"><label>Rating</label><select id="edit-venue-rating">
+        ${ratingOpts.map(([val, label]) => `<option value="${val}" ${val === v.rating ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Status</label><select id="edit-venue-status">
+        ${statusOpts.map(([val, label]) => `<option value="${val}" ${val === v.status ? 'selected' : ''}>${label}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Pros (comma-separated)</label><input type="text" id="edit-venue-pros" value="${escapeAttr(v.pros)}"></div>
+      <div class="form-group"><label>Cons (comma-separated)</label><input type="text" id="edit-venue-cons" value="${escapeAttr(v.cons)}"></div>
+      <div class="form-group"><label>Notes</label><textarea id="edit-venue-notes" rows="3">${escapeHtml(v.notes)}</textarea></div>
+    `, () => {
+      v.name = document.getElementById('edit-venue-name').value.trim();
+      v.type = document.getElementById('edit-venue-type').value;
+      v.location = document.getElementById('edit-venue-location').value.trim();
+      v.capacity = parseInt(document.getElementById('edit-venue-capacity').value, 10) || 0;
+      v.costLow = parseFloat(document.getElementById('edit-venue-cost-low').value) || 0;
+      v.costHigh = parseFloat(document.getElementById('edit-venue-cost-high').value) || 0;
+      v.setting = document.getElementById('edit-venue-setting').value;
+      v.catering = document.getElementById('edit-venue-catering').value;
+      v.website = document.getElementById('edit-venue-website').value.trim();
+      v.phone = document.getElementById('edit-venue-phone').value.trim();
+      v.contact = document.getElementById('edit-venue-contact').value.trim();
+      v.availability = document.getElementById('edit-venue-avail').value;
+      v.rating = parseInt(document.getElementById('edit-venue-rating').value, 10) || 0;
+      v.status = document.getElementById('edit-venue-status').value;
+      v.pros = document.getElementById('edit-venue-pros').value.trim();
+      v.cons = document.getElementById('edit-venue-cons').value.trim();
+      v.notes = document.getElementById('edit-venue-notes').value.trim();
+      saveState();
+      renderVenues();
+    });
   }
 
   // ═══════════════════════════════════════════
@@ -1157,6 +1364,7 @@
   // ─── Public API ──────────────────────────
   window.app = {
     deleteExpense, editExpense,
+    deleteVenue, editVenue,
     deleteVendor, editVendor,
     toggleTodo, deleteTodo, editTodo,
     deleteGuest, editGuest,
@@ -1171,6 +1379,7 @@
     renderDashboard();
     renderBudget();
     renderGuests();
+    renderVenues();
     renderVendors();
     renderSeating();
     renderTimeline();

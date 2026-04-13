@@ -661,6 +661,182 @@ tbody tr:last-child td { border-bottom: none; }
 .status-badge.confirmed { background: #e8f5e8; color: #3d7a3d; }
 .status-badge.pending { background: #fff3e0; color: #b8860b; }
 
+/* ─── Venue Research ─────────────────────── */
+
+.venue-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.venue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+.venue-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), box-shadow var(--transition);
+  position: relative;
+}
+
+.venue-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.venue-card.is-favorite {
+  border-color: var(--color-warning);
+}
+
+.venue-card.is-booked {
+  border-color: var(--color-success);
+}
+
+.venue-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.venue-card-header h4 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  flex: 1;
+}
+
+.venue-card-type {
+  font-size: 0.72rem;
+  font-weight: 500;
+  padding: 0.15rem 0.55rem;
+  border-radius: 10px;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.venue-card-stats {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.venue-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.venue-stat strong {
+  color: var(--color-primary-dark);
+  font-weight: 600;
+}
+
+.venue-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.venue-card-details a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.venue-card-details a:hover { text-decoration: underline; }
+
+.venue-rating-stars {
+  color: var(--color-warning);
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.venue-rating-stars .empty-star {
+  opacity: 0.3;
+}
+
+.venue-pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.venue-pros, .venue-cons {
+  font-size: 0.78rem;
+}
+
+.venue-pros-label, .venue-cons-label {
+  font-weight: 600;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+
+.venue-pros-label { color: var(--color-success); }
+.venue-cons-label { color: var(--color-danger); }
+
+.venue-pros ul, .venue-cons ul {
+  list-style: none;
+  padding: 0;
+}
+
+.venue-pros li::before {
+  content: '+ ';
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.venue-cons li::before {
+  content: '- ';
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.venue-card-notes {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.venue-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.venue-card-footer .status-badge.toured { background: #e3f2fd; color: #1565c0; }
+.venue-card-footer .status-badge.favorite { background: #fff3e0; color: #b8860b; }
+.venue-card-footer .status-badge.passed { background: #f5f5f5; color: #888; }
+
 /* ─── Vendor Grid ───────────────────────── */
 
 .vendor-grid {
@@ -1351,6 +1527,7 @@ footer {
   .currency-input { width: 100%; }
   .currency-input input { width: 100%; }
   .vendor-grid { grid-template-columns: 1fr; }
+  .venue-grid { grid-template-columns: 1fr; }
   .seating-layout { grid-template-columns: 1fr; justify-items: center; }
   .notes-grid { grid-template-columns: 1fr; }
 
