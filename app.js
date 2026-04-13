@@ -51,12 +51,33 @@
     };
   }
 
+  function ensureArray(val) {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') return Object.values(val);
+    return [];
+  }
+
+  function normalizeState(s) {
+    s.expenses = ensureArray(s.expenses);
+    s.vendors = ensureArray(s.vendors);
+    s.todos = ensureArray(s.todos);
+    s.guests = ensureArray(s.guests);
+    s.tables = ensureArray(s.tables).map(t => ({
+      ...t,
+      guestIds: ensureArray(t.guestIds),
+    }));
+    s.timelineEvents = ensureArray(s.timelineEvents);
+    s.notes = ensureArray(s.notes);
+    s.venues = ensureArray(s.venues);
+    return s;
+  }
+
   function loadState() {
     try {
       const raw = localStorage.getItem('wedding-planner-state');
       if (raw) {
         const s = JSON.parse(raw);
-        return Object.assign(defaultState(), s);
+        return normalizeState(Object.assign(defaultState(), s));
       }
     } catch (_) {}
     return defaultState();
@@ -1393,7 +1414,7 @@
       if (Date.now() - lastSaveTimestamp < 2000) return;
       const data = snapshot.val();
       if (data) {
-        state = Object.assign(defaultState(), data);
+        state = normalizeState(Object.assign(defaultState(), data));
         localStorage.setItem('wedding-planner-state', JSON.stringify(state));
         refreshAll();
       }
