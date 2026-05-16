@@ -412,6 +412,107 @@ main {
   font-size: 0.78rem;
 }
 
+/* ─── Finances Section ─────────────────── */
+
+.finance-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.finance-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.finance-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.finance-card-icon {
+  font-size: 1.8rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  flex-shrink: 0;
+}
+
+.finance-income .finance-card-icon { background: #e8f5e8; }
+.finance-expense .finance-card-icon { background: #fce8ec; }
+.finance-balance .finance-card-icon { background: #e3f0f8; }
+
+.finance-card-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.1rem;
+}
+
+.finance-card-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+.finance-income .finance-card-value { color: var(--color-success); }
+.finance-expense .finance-card-value { color: var(--color-danger); }
+.finance-balance .finance-card-value { color: var(--color-primary-dark); }
+.finance-balance .finance-card-value.negative { color: var(--color-danger); }
+
+.txn-amount-income {
+  color: var(--color-success);
+  font-weight: 600;
+}
+
+.txn-amount-expense {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.txn-balance-positive {
+  font-weight: 600;
+  color: var(--color-primary-dark);
+}
+
+.txn-balance-negative {
+  font-weight: 600;
+  color: var(--color-danger);
+}
+
+.txn-category-tag {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.txn-category-tag.income {
+  background: #e8f5e8;
+  color: #3d7a3d;
+}
+
+.txn-category-tag.expense {
+  background: #fce8ec;
+  color: #c62828;
+}
+
 /* ─── Budget Section ────────────────────── */
 
 .budget-top-bar {

@@ -47,6 +47,7 @@
       tables: [],
       timelineEvents: [],
       notes: [],
+      transactions: [],
       venues: [],
     };
   }
@@ -143,6 +144,7 @@
         if (s.id === target) s.classList.add('active');
       });
       if (target === 'dashboard') renderDashboard();
+      if (target === 'finances') renderFinances();
       if (target === 'seating') renderSeating();
     });
   });
@@ -314,6 +316,153 @@
       expense.status = document.getElementById('edit-expense-status').value;
       saveState();
       renderBudget();
+    });
+  }
+
+  // ═══════════════════════════════════════════
+  // FINANCES
+  // ═══════════════════════════════════════════
+  const transactionForm = document.getElementById('transaction-form');
+  const filterTxnType = document.getElementById('filter-txn-type');
+
+  transactionForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const txn = {
+      id: uid(),
+      type: document.getElementById('txn-type').value,
+      description: document.getElementById('txn-description').value.trim(),
+      category: document.getElementById('txn-category').value,
+      amount: parseFloat(document.getElementById('txn-amount').value) || 0,
+      date: document.getElementById('txn-date').value || new Date().toISOString().slice(0, 10),
+      notes: document.getElementById('txn-notes').value.trim(),
+    };
+    if (!txn.description || !txn.amount) return;
+    state.transactions.push(txn);
+    saveState();
+    transactionForm.reset();
+    renderFinances();
+  });
+
+  filterTxnType.addEventListener('change', renderTransactionsTable);
+
+  function getFinanceTotals() {
+    const income = (state.transactions || [])
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + t.amount, 0);
+    const spent = (state.transactions || [])
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+    return { income, spent, balance: income - spent };
+  }
+
+  function renderFinances() {
+    const { income, spent, balance } = getFinanceTotals();
+    document.getElementById('finance-income').textContent = fmt(income);
+    document.getElementById('finance-spent').textContent = fmt(spent);
+
+    const balanceEl = document.getElementById('finance-balance');
+    balanceEl.textContent = fmt(balance);
+    balanceEl.classList.toggle('negative', balance < 0);
+
+    renderTransactionsTable();
+  }
+
+  function renderTransactionsTable() {
+    const tbody = document.getElementById('transactions-body');
+    const emptyMsg = document.getElementById('transactions-empty');
+    const filter = filterTxnType.value;
+
+    let txns = state.transactions || [];
+    if (filter !== 'all') txns = txns.filter(t => t.type === filter);
+
+    const sorted = [...txns].sort((a, b) => {
+      if (a.date && b.date) return a.date.localeCompare(b.date);
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return 0;
+    });
+
+    if (sorted.length === 0) {
+      tbody.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    const allSorted = [...(state.transactions || [])].sort((a, b) => {
+      if (a.date && b.date) return a.date.localeCompare(b.date);
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return 0;
+    });
+
+    const runningBalances = {};
+    let running = 0;
+    allSorted.forEach(t => {
+      running += t.type === 'income' ? t.amount : -t.amount;
+      runningBalances[t.id] = running;
+    });
+
+    tbody.innerHTML = sorted.map(t => {
+      const isIncome = t.type === 'income';
+      const amountClass = isIncome ? 'txn-amount-income' : 'txn-amount-expense';
+      const sign = isIncome ? '+' : '-';
+      const bal = runningBalances[t.id] || 0;
+
+      return `
+        <tr>
+          <td>${fmtDate(t.date)}</td>
+          <td>
+            <strong>${escapeHtml(t.description)}</strong>
+            ${t.notes ? '<br><span style="font-size:0.78rem;color:var(--color-text-muted)">' + escapeHtml(t.notes) + '</span>' : ''}
+          </td>
+          <td><span class="txn-category-tag ${t.type}">${escapeHtml(t.category)}</span></td>
+          <td class="${amountClass}">${sign}${fmtFull(t.amount)}</td>
+          <td class="${bal >= 0 ? 'txn-balance-positive' : 'txn-balance-negative'}">${fmtFull(bal)}</td>
+          <td>
+            <button class="btn-icon" onclick="app.editTransaction('${t.id}')" title="Edit">✏️</button>
+            <button class="btn-icon" onclick="app.deleteTransaction('${t.id}')" title="Delete">🗑️</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function deleteTransaction(id) {
+    state.transactions = state.transactions.filter(t => t.id !== id);
+    saveState();
+    renderFinances();
+  }
+
+  function editTransaction(id) {
+    const t = (state.transactions || []).find(t => t.id === id);
+    if (!t) return;
+
+    const incomeCats = ['Family Gift', 'Personal Savings', 'Registry', 'Other Income'];
+    const expenseCats = ['Venue', 'Catering', 'Photography', 'Flowers', 'Music / DJ', 'Attire', 'Decor', 'Stationery', 'Transportation', 'Other Expense'];
+    const allCats = [...incomeCats, ...expenseCats];
+
+    openModal('Edit Transaction', `
+      <div class="form-group"><label>Type</label><select id="edit-txn-type">
+        <option value="income" ${t.type === 'income' ? 'selected' : ''}>Income</option>
+        <option value="expense" ${t.type === 'expense' ? 'selected' : ''}>Expense</option>
+      </select></div>
+      <div class="form-group"><label>Description</label><input type="text" id="edit-txn-description" value="${escapeAttr(t.description)}"></div>
+      <div class="form-group"><label>Category</label><select id="edit-txn-category">
+        ${allCats.map(c => `<option value="${c}" ${c === t.category ? 'selected' : ''}>${c}</option>`).join('')}
+      </select></div>
+      <div class="form-group"><label>Amount</label><input type="number" id="edit-txn-amount" value="${t.amount}" min="0" step="0.01"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="edit-txn-date" value="${t.date || ''}"></div>
+      <div class="form-group"><label>Notes</label><input type="text" id="edit-txn-notes" value="${escapeAttr(t.notes || '')}"></div>
+    `, () => {
+      t.type = document.getElementById('edit-txn-type').value;
+      t.description = document.getElementById('edit-txn-description').value.trim();
+      t.category = document.getElementById('edit-txn-category').value;
+      t.amount = parseFloat(document.getElementById('edit-txn-amount').value) || 0;
+      t.date = document.getElementById('edit-txn-date').value;
+      t.notes = document.getElementById('edit-txn-notes').value.trim();
+      saveState();
+      renderFinances();
     });
   }
 
@@ -1385,6 +1534,7 @@
   // ─── Public API ──────────────────────────
   window.app = {
     deleteExpense, editExpense,
+    deleteTransaction, editTransaction,
     deleteVenue, editVenue,
     deleteVendor, editVendor,
     toggleTodo, deleteTodo, editTodo,
@@ -1398,6 +1548,7 @@
   function refreshAll() {
     startCountdown();
     renderDashboard();
+    renderFinances();
     renderBudget();
     renderGuests();
     renderVenues();
